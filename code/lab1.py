@@ -35,7 +35,7 @@ def show_normal_histogram():
         y = [normal_density(_) for _ in x]
         plot.plot(x, y, color='tomato')
         sbrn.distplot(x)
-        plot.ylabel("destiny")
+        plot.ylabel("density")
         plot.xlabel("capacity - %s" % cap)
         plot.grid()
         destiny = mpatches.Patch(color='tomato', label='плотность')
@@ -53,7 +53,7 @@ def show_cauchy_histogram():
         x = sorted(set(values))
         y = [cauchy_density(_) for _ in x]
         plot.plot(x, y, color='tomato')
-        plot.ylabel("destiny")
+        plot.ylabel("density")
         plot.xlabel("capacity - %s" % cap)
         plot.grid()
         destiny = mpatches.Patch(color='tomato', label='плотность')
@@ -71,7 +71,7 @@ def show_laplas_histogram():
         x = sorted(set(values))
         y = [laplas_density(_) for _ in x]
         plot.plot(x, y, color='tomato')
-        plot.ylabel("destiny")
+        plot.ylabel("density")
         plot.xlabel("capacity - %s" % cap)
         plot.grid()
         destiny = mpatches.Patch(color='tomato', label='плотность')
@@ -89,7 +89,7 @@ def show_poisson_histogram():
         x = sorted(set(values))
         y = [poisson_density(_) for _ in x]
         plot.plot(x, y, color='tomato')
-        plot.ylabel("destiny")
+        plot.ylabel("density")
         plot.xlabel("capacity - %s" % cap)
         plot.grid()
         destiny = mpatches.Patch(color='tomato', label='плотность')
@@ -107,7 +107,7 @@ def show_uniform_histogram():
         x = sorted(set(values))
         y = [uniform_density(_) for _ in x]
         plot.plot(x, y, color='tomato')
-        plot.ylabel("destiny")
+        plot.ylabel("density")
         plot.xlabel("capacity - %s" % cap)
         plot.grid()
         destiny = mpatches.Patch(color='tomato', label='плотность')
