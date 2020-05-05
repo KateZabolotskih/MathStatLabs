@@ -1,105 +1,68 @@
+import math
 import numpy as np
-from math import sqrt, pi, exp, pow, factorial, fabs, ceil
-import matplotlib.pyplot as plt
+from scipy import stats
+from matplotlib import pyplot as plt
 
-capacities = [20, 100]
+params = [
+    {
+        'name': "normal",
+        'distr': stats.norm(0, 1)
+    },
+    {
+        'name': "cauchy",
+        'distr': stats.cauchy(loc=0, scale=1)
+    },
+    {
+        'name': "laplace",
+        'distr': stats.laplace(loc=0, scale=1 / math.sqrt(2))
+    },
+    {
+        'name': "uniform",
+        'distr': stats.uniform(-math.sqrt(3), 2 * math.sqrt(3))
+    },
+    {
+        'name': "poisson",
+        'distr': stats.poisson(10)
+    }
+]
 
-class Sample:
-    @staticmethod
-    def normal(size):
-        return np.random.normal(size=size)
-
-    @staticmethod
-    def cauchy(size):
-        return np.random.standard_cauchy(size=size)
-
-    @staticmethod
-    def laplace(size):
-        return np.random.laplace(0, 1 / sqrt(2), size=size)
-
-    @staticmethod
-    def poisson(size):
-        return np.random.poisson(10, size=size)
-
-    @staticmethod
-    def uniform(size):
-        return np.random.uniform(-sqrt(3), sqrt(3), size=size)
-
-def ShowBoxPlot(sample1, sample2, name):
-    _, ax = plt.subplots()
-    ax.boxplot([sample1, sample2], vert=False)
-    ax.set_title(name)
-    ax.set_yticklabels(['20', '100'])
-    plt.show()
-
-ShowBoxPlot(Sample.normal(capacities[0]), Sample.normal(capacities[1]), "normal")
-ShowBoxPlot(Sample.cauchy(capacities[0]), Sample.cauchy(capacities[1]), " cauchy")
-ShowBoxPlot(Sample.laplace(capacities[0]), Sample.laplace(capacities[1]), "laplace")
-ShowBoxPlot(Sample.poisson(capacities[0]), Sample.poisson(capacities[1]), "poisson")
-ShowBoxPlot(Sample.uniform(capacities[0]), Sample.uniform(capacities[1]), "uniform")
-
-for cap in capacities:
-    samples = [Sample.normal(cap),
-               Sample.cauchy(cap),
-               Sample.laplace(cap),
-               Sample.poisson(cap),
-               Sample.uniform(cap)]
-    distributions = ["normal", "cauchy", "laplace", "poisson", "uniform"]
-    sum = 0
-    i = 0
-    for sam in samples:
-        for _ in range(1000):
-            array = sorted(sam)
-            l = len(array)
-            Q1 = array[int(1 / 4 * l)]
-            Q3 = array[int(3 / 4 * l)]
-            X1 = Q1 - 3 / 2 * (Q3 - Q1)
-            X2 = Q3 + 3 / 2 * (Q3 - Q1)
-            discharge = list(filter(lambda x: x < X1 or x > X2, array))
-            discharges = len(list(filter(lambda x: x < X1 or x > X2, array)))
-            sum += discharges
-        print("%s-%s average discharges proportion %s" % (distributions[i], cap, sum / 1000 / cap))
-        i += 1
-
-
-# experiment PARAMETERS
 sizes = [20, 100]
-n_tests = len(sizes)
-n_calc = 1000
-whis = 1.5
-n_digits = 6
-eps = 0.0000001
+calculations_number = 1000
 
-for distr in sf.distrs:
-    for j in range(0, n_tests):
-        outliers = np.zeros(n_calc)
-        for i in range(0, n_calc):
-            values = distr['stat'].rvs(size=sizes[j])
-            # calculating borders as LQ - whis * IQR, UQ + whis * IQR
+for param in params:
+    values = []
+    for size in sizes:
+        values.append(param['distr'].rvs(size=size))
+
+    fig, ax = plt.subplots()
+    plt.grid(axis='x')
+    ax.boxplot(values, vert=False, medianprops=dict(color='r'), labels=["20", "100"])
+    plt.savefig(param['name'] + ".png")
+
+for param in params:
+    for size in sizes:
+        outliers = np.zeros(calculations_number)
+        for i in range(0, calculations_number):
+            values = param['distr'].rvs(size=size)
             lq = np.quantile(values, 0.25)
             uq = np.quantile(values, 0.75)
             iqr = uq - lq
-            l = lq - whis * iqr
-            r = uq + whis * iqr
-            # test data for outliers
-            for m in range(0, sizes[j]):
-                if values[m] < l or values[m] > r:
-                    outliers[i] += 1
-        outliers /= sizes[j]
-        prob = sum(outliers) / n_calc  # outliers frequency
-        disp = (1 / n_calc) * (sum(outliers * outliers)) - prob * prob
-        print(distr['name'] + ", n=" + str(sizes[j]) + " :")
-        print("P = " + str(round(prob, n_digits)))
-        print("D = " + str(round(disp, n_digits)))
+            l = lq - 1.5 * iqr
+            r = uq + 1.5 * iqr
 
-print("")
+            out1 = values[values < l]
+            out2 = values[values > r]
+            outliers[i] = len(out1) + len(out2)
+        outliers /= size
+        prob = sum(outliers) / calculations_number
+        disp = (1 / calculations_number) * (sum(outliers * outliers)) - prob * prob
+        print(param['name'], "with n =", size)
+        print("P =", round(prob, 6))
+        print("D =", round(disp, 6))
 
-# theoretical outlier probabilities
-print("")
-print("Theoretical:")
-for distr in sf.distrs:
-    stat = distr['stat']
-    X1 = stat.ppf(1/4) - (3/2) * (stat.ppf(3/4) - stat.ppf(1/4))
-    X2 = stat.ppf(3/4) + (3/2) * (stat.ppf(3/4) - stat.ppf(1/4))
-    P = stat.cdf(X1) - (stat.cdf(X1+eps) - stat.cdf(X1-eps)) + (1 - stat.cdf(X2))
-    print(distr['name'] + ": " + str(P))
+    distr = param['distr']
+    X1 = distr.ppf(0.25) - 1.5 * (distr.ppf(0.75) - distr.ppf(0.25))
+    X2 = distr.ppf(0.75) + 1.5 * (distr.ppf(0.75) - distr.ppf(0.25))
+    P = distr.cdf(X1) - (distr.cdf(X1 + 0.0000001) - distr.cdf(X1 - 0.0000001)) + (1 - distr.cdf(X2))
+    print("theoretical", param['name'], ":", P)
+    print("")
