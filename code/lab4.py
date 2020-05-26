@@ -55,6 +55,8 @@ def empirical_density(x, sample):
     n = len(sample)
     sum = 0
     hn = 1.06 * sqrt(np.var(sample)) * pow(n, -1 / 5)
+    hHalf = hn / 2
+    doubleH = 2 * hn
     for xi in sample:
         sum += kernel((x-xi) / hn)
     return sum / n / hn
@@ -98,4 +100,3 @@ for dist in distributions:
         plt.plot(x, y_pf, color="darkgreen")
         i += 1
     plt.show()
-
