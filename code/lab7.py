@@ -57,8 +57,8 @@ if __name__ == "__main__":
             'data': stats.norm(0, 1).rvs(100)
         },
         {
-            'name': "C(0, 1) - 100",
-            'data': stats.cauchy(0, 1).rvs(100)
+            'name': "L(0, 1) - 20",
+            'data': stats.laplace(0, 1/math.sqrt(2)).rvs(20)
         }
     ]
 
